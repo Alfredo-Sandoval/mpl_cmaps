@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matplotlib Color Maps Explorer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #1e1e1e;
+            color: #e0e0e0;
+            line-height: 1.6;
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #ffffff;
+            font-weight: 300;
+            font-size: 2.5rem;
+        }
+
+        .loading {
+            text-align: center;
+            font-size: 24px;
+            color: #00d4ff;
+            margin: 50px 0;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .cmap-card {
+            background: #2d2d2d;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid #404040;
+        }
+
+        .cmap-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+            border-color: #606060;
+        }
+
+        .cmap-card:focus-visible {
+            outline: 2px solid #00d4ff;
+            outline-offset: 2px;
+        }
+
+        .cmap-gradient {
+            width: 100%;
+            height: 150px;
+            position: relative;
+        }
+
+        .cmap-info {
+            padding: 15px;
+        }
+
+        .cmap-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #f1f3f5; /* brighter for dark background */
+        }
+
+        .cmap-details {
+            font-size: 12px;
+            color: #d0d0d0; /* higher contrast than previous muted gray */
+            margin-bottom: 8px;
+        }
+
+        .cmap-preview {
+            display: flex;
+            gap: 2px;
+            margin-top: 10px;
+        }
+
+        .color-swatch {
+            height: 20px;
+            flex: 1;
+            border-radius: 2px;
+            border: 1px solid rgba(255,255,255,0.10); /* subtle separation from dark card */
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .control-btn {
+            background: rgba(0, 212, 255, 0.2);
+            border: 2px solid #00d4ff;
+            color: #00d4ff;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: rgba(0, 212, 255, 0.4);
+        }
+
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+
+        .search-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            padding: 12px 16px;
+            width: 400px;
+            border: 1px solid #404040;
+            border-radius: 6px;
+            background: #2d2d2d;
+            color: #e0e0e0;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input::placeholder {
+            color: #bfbfbf; /* lighter placeholder for legibility */
+        }
+
+        .search-input:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+
+        .stats {
+            text-align: center;
+            margin: 20px 0;
+            color: #d0d0d0; /* brighter stats text */
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #2d2d2d;
+            border-radius: 8px;
+            padding: 30px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            border: 1px solid #404040;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #e0e0e0; /* make close icon more visible */
+            background: none;
+            border: none;
+            padding: 0;
+        }
+
+        .modal-gradient {
+            width: 100%;
+            height: 300px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .modal-info {
+            text-align: center;
+        }
+
+        .modal-name {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #ffffff;
+        }
+
+        .modal-details {
+            font-size: 14px;
+            color: #d0d0d0;
+            margin-bottom: 20px;
+        }
+
+        .color-palette {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(30px, 1fr));
+            gap: 2px;
+            margin-top: 20px;
+        }
+
+        .palette-color {
+            height: 30px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .palette-color:hover {
+            transform: scale(1.2);
+            z-index: 10;
+        }
+
+        .categories {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .category-btn {
+            background: #2d2d2d;
+            border: 1px solid #404040;
+            color: #e0e0e0;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+
+        .category-btn:hover,
+        .category-btn.active {
+            background: #007bff;
+            border-color: #007bff;
+            color: #ffffff;
+        }
+
+        .quality-badges {
+            display: flex;
+            gap: 5px;
+            margin-top: 8px;
+        }
+
+        .badge {
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.4) inset; /* subtle depth */
+            border: 1px solid rgba(255,255,255,0.06); /* faint border for separation */
+        }
+
+        .badge.perceptual { background: #28a745; color: white; }
+        .badge.colorblind { background: #007bff; color: white; }
+        .badge.printing { background: #ffc107; color: black; }
+        .badge.rainbow { background: #dc3545; color: white; }
+        .badge.sequential { background: #6f42c1; color: white; }
+        .badge.diverging { background: #fd7e14; color: white; }
+        .badge.qualitative { background: #20c997; color: white; }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+            .search-input {
+                width: 300px;
+            }
+            .controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Matplotlib Color Maps Explorer</h1>
+
+        <div class="search-container">
+            <label for="searchInput" class="sr-only">Search color maps</label>
+            <input type="text" class="search-input" placeholder="Search color maps..." id="searchInput" aria-label="Search color maps">
+        </div>
+
+        <div class="categories">
+            <button class="category-btn active" data-category="all" aria-pressed="true">All</button>
+            <button class="category-btn" data-category="scientific" aria-pressed="false">Recommended</button>
+            <button class="category-btn" data-category="sequential" aria-pressed="false">Sequential</button>
+            <button class="category-btn" data-category="diverging" aria-pressed="false">Diverging</button>
+            <button class="category-btn" data-category="qualitative" aria-pressed="false">Qualitative</button>
+            <button class="category-btn" data-category="perceptual" aria-pressed="false">Perceptually Uniform</button>
+            <button class="category-btn" data-category="problematic" aria-pressed="false">Non-uniform</button>
+        </div>
+
+        <div class="stats" id="stats">
+            Loading color maps...
+        </div>
+
+            <div style="text-align: center; margin: 20px 0; color: #b0b0b0; font-size: 14px; max-width: 900px; margin-left: auto; margin-right: auto;">
+                <div style="font-weight:600; color:#ffffff; margin-bottom:6px;">Recommended</div>
+                <div style="color:#b0b0b0; margin-bottom:10px;">Perceptually uniform maps and other well-behaved sequential, diverging, and qualitative maps that are generally preferred for data visualization.</div>
+                <div style="font-weight:600; color:#ffffff; margin-bottom:6px;">Non‑uniform / Legacy</div>
+                <div style="color:#b0b0b0; margin-bottom:10px;">Rainbow‑like or otherwise non‑uniform palettes that can mislead quantitative interpretation; use with caution.</div>
+                <div style="font-weight:600; color:#ffffff; margin-bottom:6px;">Quality indicators</div>
+                <div style="color:#b0b0b0;">Perceptually Uniform — Color‑vision Friendly — Print‑friendly — Rainbow‑like (caution)</div>
+            </div>
+
+        <div class="grid" id="colormapGrid">
+            <div class="loading">Loading color maps...</div>
+        </div>
+    </div>
+
+    <div class="modal" id="modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="modalTitle" aria-describedby="modalDesc">
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose" aria-label="Close dialog">&times;</button>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <script>
+        let allColormaps = [];
+        let filteredColormaps = [];
+        let currentCategory = 'all';
+
+        // Scientific color map categorization
+        const scientificMaps = {
+            // Perceptually uniform sequential (BEST for scientific viz)
+            perceptual: ['viridis', 'plasma', 'inferno', 'magma', 'cividis', 'turbo'],
+
+            // Good sequential maps
+            sequential_good: ['Blues', 'Greens', 'Reds', 'Purples', 'Oranges', 'Greys', 'YlOrBr', 'YlOrRd', 'OrRd', 'PuRd', 'RdPu', 'BuPu', 'GnBu', 'PuBu', 'YlGnBu', 'PuBuGn', 'BuGn', 'YlGn', 'bone', 'pink', 'copper', 'gray', 'grey'],
+
+            // Good diverging maps
+            diverging_good: ['RdYlBu', 'RdYlGn', 'RdBu', 'PiYG', 'PRGn', 'BrBG', 'PuOr', 'RdGy', 'bwr', 'coolwarm', 'seismic', 'Spectral'],
+
+            // Good qualitative maps
+            qualitative_good: ['Dark2', 'Paired', 'Set1', 'Set2', 'Set3', 'tab10', 'tab20', 'tab20b', 'tab20c'],
+
+            // Problematic maps (rainbow-like, poor perceptual properties)
+            problematic: ['jet', 'rainbow', 'gist_rainbow', 'hsv', 'hot', 'cool', 'spring', 'summer', 'autumn', 'winter', 'gist_heat', 'gist_ncar', 'gist_stern', 'brg', 'flag', 'prism', 'nipy_spectral', 'Accent', 'Pastel1', 'Pastel2', 'gnuplot', 'gnuplot2', 'CMRmap', 'afmhot', 'binary', 'gist_earth', 'gist_gray', 'gist_grey', 'ocean', 'terrain', 'twilight', 'twilight_shifted', 'Wistia'],
+
+            // Maps that work well in black and white/grayscale
+            printing_friendly: ['viridis', 'plasma', 'inferno', 'magma', 'cividis', 'Blues', 'Greens', 'Reds', 'Greys', 'bone', 'pink', 'gray', 'grey']
+        };
+
+        function getCategory(name) {
+            const baseName = name.replace('_r', '').replace('256', '');
+
+            // Check if it's perceptually uniform
+            if (scientificMaps.perceptual.some(map => baseName.includes(map))) {
+                return 'perceptual';
+            }
+
+            // Check if it's problematic
+            if (scientificMaps.problematic.some(map => baseName.includes(map))) {
+                return 'problematic';
+            }
+
+            // Check other categories
+            if (scientificMaps.sequential_good.some(map => baseName.includes(map))) {
+                return 'sequential';
+            }
+
+            if (scientificMaps.diverging_good.some(map => baseName.includes(map))) {
+                return 'diverging';
+            }
+
+            if (scientificMaps.qualitative_good.some(map => baseName.includes(map))) {
+                return 'qualitative';
+            }
+
+            return 'other';
+        }
+
+        function getQualityBadges(name, category) {
+            const badges = [];
+            const baseName = name.replace('_r', '').replace('256', '');
+
+            // Perceptual uniformity badge
+            if (scientificMaps.perceptual.some(map => baseName.includes(map))) {
+                badges.push('<span class="badge perceptual">PERCEPTUAL</span>');
+            }
+
+            // Colorblind friendly badge
+            if (scientificMaps.perceptual.some(map => baseName.includes(map)) ||
+                ['viridis', 'plasma', 'cividis', 'Blues', 'Greens', 'Reds', 'Greys', 'Purples', 'Oranges'].some(map => baseName.includes(map))) {
+                badges.push('<span class="badge colorblind">COLORBLIND</span>');
+            }
+
+            // Printing friendly badge
+            if (scientificMaps.printing_friendly.some(map => baseName.includes(map))) {
+                badges.push('<span class="badge printing">PRINT</span>');
+            }
+
+            // Rainbow/problematic badge
+            if (scientificMaps.problematic.some(map => baseName.includes(map))) {
+                badges.push('<span class="badge rainbow">RAINBOW</span>');
+            }
+
+            // Data type badges
+            if (category === 'sequential') {
+                badges.push('<span class="badge sequential">SEQ</span>');
+            } else if (category === 'diverging') {
+                badges.push('<span class="badge diverging">DIV</span>');
+            } else if (category === 'qualitative') {
+                badges.push('<span class="badge qualitative">QUAL</span>');
+            }
+
+            return badges.join('');
+        }
+
+        function labelCategory(cat) {
+            switch (cat) {
+                case 'problematic':
+                    return 'non-uniform';
+                case 'perceptual':
+                    return 'perceptual';
+                case 'sequential':
+                case 'diverging':
+                case 'qualitative':
+                    return cat;
+                default:
+                    return 'other';
+            }
+        }
+
+        // Load YAML files via generated index
+        async function loadYAMLFiles() {
+            const loadedMaps = [];
+            try {
+                const idxResp = await fetch('colormaps_index.json');
+                if (!idxResp.ok) throw new Error('Failed to load colormaps_index.json');
+                const yamlFiles = await idxResp.json();
+
+                for (const filename of yamlFiles) {
+                    try {
+                        const response = await fetch(filename);
+                        if (!response.ok) continue;
+
+                        const yamlText = await response.text();
+                        const data = jsyaml.load(yamlText);
+
+                        const paletteName = Object.keys(data.palettes.custom)[0];
+                        const colors = data.palettes.custom[paletteName];
+
+                        loadedMaps.push({
+                            name: paletteName,
+                            filename: filename,
+                            colors: colors,
+                            category: getCategory(paletteName)
+                        });
+                    } catch (error) {
+                        console.log(`Error loading ${filename}:`, error);
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+            }
+
+            // Add reversed versions programmatically
+            const reversedMaps = loadedMaps.map(cmap => ({
+                ...cmap,
+                name: cmap.name + '_r',
+                colors: [...cmap.colors].reverse()
+            }));
+
+            allColormaps = [...loadedMaps, ...reversedMaps];
+            filteredColormaps = [...allColormaps];
+
+            updateDisplay();
+        }
+
+
+
+        function generateGradient(colors) {
+            if (colors.length === 1) {
+                const rgb = colors[0].split(',').map(x => parseInt(x.trim()));
+                return `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
+            }
+
+            // Sample colors for gradient (take every nth color to avoid too many stops)
+            const step = Math.max(1, Math.floor(colors.length / 10));
+            const gradientColors = [];
+
+            for (let i = 0; i < colors.length; i += step) {
+                const rgb = colors[i].split(',').map(x => parseInt(x.trim()));
+                gradientColors.push(`rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`);
+            }
+
+            // Always include the last color
+            if (colors.length > 1) {
+                const rgb = colors[colors.length - 1].split(',').map(x => parseInt(x.trim()));
+                gradientColors.push(`rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`);
+            }
+
+            return `linear-gradient(to right, ${gradientColors.join(', ')})`;
+        }
+
+        function createColormapCard(cmap) {
+            const gradient = generateGradient(cmap.colors);
+            const badges = getQualityBadges(cmap.name, cmap.category);
+
+            // Create color swatches (sample of colors)
+            const swatches = [];
+            const step = Math.max(1, Math.floor(cmap.colors.length / 8));
+
+            for (let i = 0; i < cmap.colors.length; i += step) {
+                const rgb = cmap.colors[i].split(',').map(x => parseInt(x.trim()));
+                swatches.push(`<div class="color-swatch" style="background: rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})"></div>`);
+            }
+
+            return `
+                <div class="cmap-card" data-name="${cmap.name.toLowerCase()}" data-category="${cmap.category}" tabindex="0" role="button" aria-label="Open details for ${cmap.name}" onclick="showModal('${cmap.name}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showModal('${cmap.name}');}">
+                    <div class="cmap-gradient" style="background: ${gradient}"></div>
+                    <div class="cmap-info">
+                        <div class="cmap-name">${cmap.name}</div>
+                        <div class="cmap-details">${cmap.colors.length} colors • ${labelCategory(cmap.category)}</div>
+                        <div class="quality-badges">
+                            ${badges}
+                        </div>
+                        <div class="cmap-preview">
+                            ${swatches.join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateDisplay() {
+            const grid = document.getElementById('colormapGrid');
+            const stats = document.getElementById('stats');
+
+            grid.innerHTML = filteredColormaps.map(createColormapCard).join('');
+            stats.textContent = `Showing ${filteredColormaps.length} of ${allColormaps.length} color maps`;
+        }
+
+        function filterColormaps() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+            filteredColormaps = allColormaps.filter(cmap => {
+                const matchesSearch = cmap.name.toLowerCase().includes(searchTerm);
+
+                let matchesCategory = false;
+                if (currentCategory === 'all') {
+                    matchesCategory = true;
+                } else if (currentCategory === 'scientific') {
+                    // Scientific grade includes perceptual + good sequential/diverging/qualitative
+                    matchesCategory = ['perceptual', 'sequential', 'diverging', 'qualitative'].includes(cmap.category);
+                } else {
+                    matchesCategory = cmap.category === currentCategory;
+                }
+
+                return matchesSearch && matchesCategory;
+            });
+
+            updateDisplay();
+        }
+
+        let lastFocusedElement = null;
+
+        function showModal(name) {
+            const cmap = allColormaps.find(c => c.name === name);
+            if (!cmap) return;
+
+            const gradient = generateGradient(cmap.colors);
+            const modal = document.getElementById('modal');
+            const modalContent = document.getElementById('modalContent');
+
+            // Create color palette grid
+            const paletteColors = cmap.colors.map(color => {
+                const rgb = color.split(',').map(x => parseInt(x.trim()));
+                return `<div class="palette-color" style="background: rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})" title="RGB(${rgb[0]}, ${rgb[1]}, ${rgb[2]})"></div>`;
+            });
+
+            modalContent.innerHTML = `
+                <div class="modal-gradient" style="background: ${gradient}"></div>
+                <div class="modal-info">
+                    <div class="modal-name" id="modalTitle">${cmap.name}</div>
+                    <div class="modal-details" id="modalDesc">${cmap.colors.length} colors • ${labelCategory(cmap.category)} • ${cmap.filename}</div>
+                    <div class="color-palette">
+                        ${paletteColors.join('')}
+                    </div>
+                </div>
+            `;
+
+            lastFocusedElement = document.activeElement;
+            modal.style.display = 'block';
+            modal.setAttribute('aria-hidden', 'false');
+            const closeBtn = document.getElementById('modalClose');
+            if (closeBtn) closeBtn.focus();
+        }
+
+        // Event listeners
+        document.getElementById('searchInput').addEventListener('input', filterColormaps);
+
+        document.querySelectorAll('.category-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.category-btn').forEach(b => {
+                    b.classList.remove('active');
+                    b.setAttribute('aria-pressed', 'false');
+                });
+                e.target.classList.add('active');
+                e.target.setAttribute('aria-pressed', 'true');
+                currentCategory = e.target.dataset.category;
+                filterColormaps();
+            });
+        });
+
+        document.getElementById('modalClose').addEventListener('click', () => {
+            const modal = document.getElementById('modal');
+            modal.style.display = 'none';
+            modal.setAttribute('aria-hidden', 'true');
+            if (lastFocusedElement) lastFocusedElement.focus();
+        });
+
+        document.getElementById('modal').addEventListener('click', (e) => {
+            const modal = document.getElementById('modal');
+            if (e.target === modal) {
+                modal.style.display = 'none';
+                modal.setAttribute('aria-hidden', 'true');
+                if (lastFocusedElement) lastFocusedElement.focus();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            const modal = document.getElementById('modal');
+            if (e.key === 'Escape' && modal.style.display === 'block') {
+                modal.style.display = 'none';
+                modal.setAttribute('aria-hidden', 'true');
+                if (lastFocusedElement) lastFocusedElement.focus();
+            }
+        });
+
+        // Initialize
+        loadYAMLFiles();
+    </script>
+</body>
+</html>
