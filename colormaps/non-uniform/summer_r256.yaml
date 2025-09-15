@@ -1,3 +1,5 @@
+# source: Matplotlib (https://matplotlib.org/stable/project/license.html)
+# palette: summer_r256
 palettes:
   custom:
     summer_r256:

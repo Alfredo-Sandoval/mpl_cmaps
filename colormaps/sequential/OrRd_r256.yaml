@@ -1,3 +1,5 @@
+# source: ColorBrewer (https://colorbrewer2.org, Apache-2.0)
+# palette: OrRd_r256
 palettes:
   custom:
     OrRd_r256:

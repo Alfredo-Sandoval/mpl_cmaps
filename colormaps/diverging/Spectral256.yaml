@@ -1,3 +1,5 @@
+# source: ColorBrewer (https://colorbrewer2.org, Apache-2.0)
+# palette: Spectral256
 palettes:
   custom:
     Spectral256:

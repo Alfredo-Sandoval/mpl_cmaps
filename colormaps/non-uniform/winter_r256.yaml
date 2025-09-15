@@ -1,3 +1,5 @@
+# source: Matplotlib (https://matplotlib.org/stable/project/license.html)
+# palette: winter_r256
 palettes:
   custom:
     winter_r256:

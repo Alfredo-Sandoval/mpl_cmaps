@@ -1,3 +1,5 @@
+# source: Turbo (https://ai.googleblog.com/2019/08/turbo-improved-rainbow-colormap-for.html, Apache-2.0)
+# palette: turbo_r
 palettes:
   custom:
     turbo_r:

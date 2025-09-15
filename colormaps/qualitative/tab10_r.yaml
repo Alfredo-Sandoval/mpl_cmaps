@@ -1,3 +1,5 @@
+# source: Matplotlib (https://matplotlib.org/stable/project/license.html)
+# palette: tab10_r
 palettes:
   custom:
     tab10_r:

@@ -1,3 +1,5 @@
+# source: Matplotlib (https://matplotlib.org/stable/project/license.html)
+# palette: jet_r256
 palettes:
   custom:
     jet_r256:

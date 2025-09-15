@@ -1,3 +1,5 @@
+# source: Matplotlib (https://matplotlib.org/stable/project/license.html)
+# palette: seismic_r256
 palettes:
   custom:
     seismic_r256:

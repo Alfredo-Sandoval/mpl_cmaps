@@ -1,3 +1,5 @@
+# source: Matplotlib (https://matplotlib.org/stable/project/license.html)
+# palette: terrain_r256
 palettes:
   custom:
     terrain_r256:

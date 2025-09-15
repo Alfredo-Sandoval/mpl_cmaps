@@ -1,3 +1,5 @@
+# source: ColorBrewer (https://colorbrewer2.org, Apache-2.0)
+# palette: Pastel1_r
 palettes:
   custom:
     Pastel1_r:

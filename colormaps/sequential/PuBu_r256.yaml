@@ -1,3 +1,5 @@
+# source: ColorBrewer (https://colorbrewer2.org, Apache-2.0)
+# palette: PuBu_r256
 palettes:
   custom:
     PuBu_r256:

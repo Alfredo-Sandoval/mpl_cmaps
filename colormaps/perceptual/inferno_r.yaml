@@ -1,3 +1,5 @@
+# source: Matplotlib (https://matplotlib.org/stable/project/license.html)
+# palette: inferno_r
 palettes:
   custom:
     inferno_r:
