@@ -1,3 +1,5 @@
+# source: ColorBrewer (https://colorbrewer2.org, Apache-2.0)
+# palette: PiYG_r256
 palettes:
   custom:
     PiYG_r256:

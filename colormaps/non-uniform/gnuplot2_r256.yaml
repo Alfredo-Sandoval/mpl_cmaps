@@ -1,3 +1,5 @@
+# source: Matplotlib (https://matplotlib.org/stable/project/license.html)
+# palette: gnuplot2_r256
 palettes:
   custom:
     gnuplot2_r256:

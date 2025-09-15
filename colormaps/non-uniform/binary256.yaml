@@ -1,3 +1,5 @@
+# source: Matplotlib (https://matplotlib.org/stable/project/license.html)
+# palette: binary256
 palettes:
   custom:
     binary256:

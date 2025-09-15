@@ -1,3 +1,5 @@
+# source: Matplotlib (https://matplotlib.org/stable/project/license.html)
+# palette: rainbow_r256
 palettes:
   custom:
     rainbow_r256:

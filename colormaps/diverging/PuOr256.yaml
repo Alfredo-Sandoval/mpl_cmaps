@@ -1,3 +1,5 @@
+# source: ColorBrewer (https://colorbrewer2.org, Apache-2.0)
+# palette: PuOr256
 palettes:
   custom:
     PuOr256:

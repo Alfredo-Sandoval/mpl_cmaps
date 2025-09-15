@@ -1,3 +1,5 @@
+# source: Matplotlib (https://matplotlib.org/stable/project/license.html)
+# palette: tab20c
 palettes:
   custom:
     tab20c:

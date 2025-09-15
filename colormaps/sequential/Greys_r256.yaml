@@ -1,3 +1,5 @@
+# source: ColorBrewer (https://colorbrewer2.org, Apache-2.0)
+# palette: Greys_r256
 palettes:
   custom:
     Greys_r256:

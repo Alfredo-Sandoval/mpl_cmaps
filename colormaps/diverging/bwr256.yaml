@@ -1,3 +1,5 @@
+# source: Matplotlib (https://matplotlib.org/stable/project/license.html)
+# palette: bwr256
 palettes:
   custom:
     bwr256:

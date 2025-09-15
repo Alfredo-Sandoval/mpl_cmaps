@@ -1,3 +1,5 @@
+# source: ColorBrewer (https://colorbrewer2.org, Apache-2.0)
+# palette: BrBG_r256
 palettes:
   custom:
     BrBG_r256:

@@ -1,3 +1,5 @@
+# source: Matplotlib (https://matplotlib.org/stable/project/license.html)
+# palette: CMRmap256
 palettes:
   custom:
     CMRmap256:

@@ -1,3 +1,5 @@
+# source: Matplotlib (https://matplotlib.org/stable/project/license.html)
+# palette: afmhot256
 palettes:
   custom:
     afmhot256:
